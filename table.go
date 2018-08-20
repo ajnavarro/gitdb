@@ -1,11 +1,8 @@
 package gitdb
 
 import (
-	"encoding/json"
-
-	"github.com/ajnavarro/gitdb/model"
-
 	"github.com/ajnavarro/gitdb/git"
+	"github.com/ajnavarro/gitdb/model"
 )
 
 type Table struct {
@@ -14,16 +11,16 @@ type Table struct {
 	repo   *git.Repository
 }
 
-func (t *Table) NewRow(cols []*Column, author *model.Author) (string, error) {
-	ops := Operations{}
-	for _, c := range cols {
-		ops = append(ops, &Operation{
-			Column: c,
-			Type:   model.OpOverride,
+func (t *Table) NewRow(fields []*model.Field, author *model.Author) (string, error) {
+	opBlock := model.OperationBlock{}
+	for _, f := range fields {
+		opBlock.Ops = append(opBlock.Ops, &model.Operation{
+			Field: f,
+			Type:  model.OpOverride,
 		})
 	}
 
-	data, err := t.opsToBytes(ops, model.OpBlockCheckpoint)
+	data, err := opBlock.Marshal(model.OpBlockAdd)
 	if err != nil {
 		return "", err
 	}
@@ -31,8 +28,8 @@ func (t *Table) NewRow(cols []*Column, author *model.Author) (string, error) {
 	return t.repo.NewRow(t.DBName, t.Name, data, author)
 }
 
-func (t *Table) UpdateRow(rowID string, ops Operations, author *model.Author) error {
-	data, err := t.opsToBytes(ops, model.OpBlockAdd)
+func (t *Table) UpdateRow(rowID string, opBlock *model.OperationBlock, author *model.Author) error {
+	data, err := opBlock.Marshal(model.OpBlockAdd)
 	if err != nil {
 		return err
 	}
@@ -40,7 +37,7 @@ func (t *Table) UpdateRow(rowID string, ops Operations, author *model.Author) er
 	return t.repo.UpdateRow(rowID, t.DBName, t.Name, data, author)
 }
 
-func (t *Table) GetRow(rowID string) *Row {
+func (t *Table) GetRow(rowID string) *model.Row {
 	return nil
 }
 
@@ -49,41 +46,6 @@ func (t *Table) GetRows() RowIterator {
 }
 
 type RowIterator interface {
-	Next() (*Row, error)
+	Next() (*model.Row, error)
 	Close() error
-}
-
-type Column struct {
-	Key   string
-	Value []byte
-}
-
-type Row struct {
-	ID      string
-	Columns []*Column
-}
-
-type Operations []*Operation
-
-type Operation struct {
-	Type   model.OperationType
-	Column *Column
-}
-
-func (t *Table) opsToBytes(ops Operations, opType model.OperationBlockType) ([]byte, error) {
-	jOps := []*model.Operation{}
-	for _, o := range ops {
-		jOps = append(jOps, &model.Operation{
-			Type:  int(o.Type),
-			Key:   o.Column.Key,
-			Value: o.Column.Value,
-		})
-	}
-
-	jop := &model.OperationBlock{
-		Type: int(opType),
-		Ops:  jOps,
-	}
-
-	return json.Marshal(jop)
 }

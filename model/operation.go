@@ -1,12 +1,24 @@
 package model
 
-type Operation struct {
-	Type  int    `json:"t"`
-	Key   string `json:"k"`
-	Value []byte `json:"v"`
-}
+import (
+	"encoding/json"
+)
 
 type OperationBlock struct {
-	Type int          `json:"t"`
-	Ops  []*Operation `json:"ops"`
+	Type OperationBlockType `json:"t"`
+	Ops  []*Operation       `json:"ops"`
+}
+
+func (pb *OperationBlock) Marshal(opType OperationBlockType) ([]byte, error) {
+	return json.Marshal(pb)
+}
+
+type Operation struct {
+	Type  OperationType `json:"t"`
+	Field *Field        `json:"f"`
+}
+
+type OperationBlockIter interface {
+	Next() (OperationBlock, error)
+	Close() error
 }

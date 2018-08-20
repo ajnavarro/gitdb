@@ -13,7 +13,7 @@ func TestSimple(t *testing.T) {
 	table, err := db.Table("TESTTABLE")
 	checkErr(err)
 
-	cols := []*Column{
+	cols := []*model.Field{
 		{
 			Key:   "c1",
 			Value: []byte("column one content"),
@@ -32,12 +32,15 @@ func TestSimple(t *testing.T) {
 	id, err := table.NewRow(cols, author)
 	checkErr(err)
 
-	ops := Operations{
-		{
-			Type: model.OpOverride,
-			Column: &Column{
-				Key:   "c1",
-				Value: []byte("other value for column 1"),
+	ops := &model.OperationBlock{
+		Type: model.OpBlockAdd,
+		Ops: []*model.Operation{
+			{
+				Type: model.OpOverride,
+				Field: &model.Field{
+					Key:   "c1",
+					Value: []byte("other value for column 1"),
+				},
 			},
 		},
 	}

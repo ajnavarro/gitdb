@@ -3,15 +3,17 @@ package model
 type OperationType int
 
 const (
-	OpOverride OperationType = iota
-	OpAdd
+	OpInvalid OperationType = iota
+	OpOverride
+	OpAppend
 	OpDelete
 )
 
 type OperationBlockType int
 
 const (
-	OpBlockCheckpoint OperationBlockType = iota
+	OpBlockInvalid OperationBlockType = iota
 	OpBlockAdd
-	OpBlockDelete
+	//TODO	OpBlockCheckpoint
+	// TODO OpBlockDelete
 )

@@ -18,6 +18,10 @@ func NewRepository(r *gogit.Repository) *Repository {
 	return &Repository{r}
 }
 
+func (r *Repository) GetOperationBlocks(rowID, dbName, tableName string) (model.OperationBlockIter, error) {
+	return nil, nil
+}
+
 func (r *Repository) UpdateRow(rowID, dbName, tableName string, data []byte, author *model.Author) error {
 	blob, err := r.blob(data)
 	if err != nil {
