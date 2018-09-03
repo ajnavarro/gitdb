@@ -7,61 +7,101 @@ import (
 	"github.com/ajnavarro/gitdb/model"
 )
 
-// TODO use go-errors
-// TODO take into account commit timestamps :S
-// TODO add more block operations
-// TODO try to eval operations in reverse order, to be able to generate fields traversing commit tree just one time
-type Evaluator struct {
+type OperationBlockIter interface {
+	Next() (*model.OperationBlock, error)
+	Close() error
 }
 
-func (e *Evaluator) Eval(opsIter model.OperationBlockIter) ([]*model.Field, error) {
-	fieldByName := make(map[string]*model.Field)
+// TODO use go-errors
+// TODO take into account commit timestamps :S
+type Evaluator struct {
+	fields          map[string]*model.Field
+	processedFields map[string]bool
+	appending       map[string]bool
+}
+
+func (e *Evaluator) Resolve(iter OperationBlockIter) ([]*model.Field, error) {
+	e.fields = make(map[string]*model.Field)
+	e.processedFields = make(map[string]bool)
+	e.appending = make(map[string]bool)
+
+For:
 	for {
-		block, err := opsIter.Next()
+		ob, err := iter.Next()
 		if err == io.EOF {
-			return getFields(fieldByName), nil
+			break
 		}
 
 		if err != nil {
 			return nil, err
 		}
 
-		switch bt := block.Type; bt {
+		switch t := ob.Type; t {
 		case model.OpBlockAdd:
-			for _, op := range block.Ops {
-				switch t := op.Type; t {
-				case model.OpOverride:
-					fieldByName[op.Field.Key] = op.Field
-				case model.OpAppend:
-					f, ok := fieldByName[op.Field.Key]
-					if !ok {
-						fieldByName[op.Field.Key] = op.Field
-						break
-					}
-
-					newField := &model.Field{
-						Key:   op.Field.Key,
-						Value: append(f.Value, op.Field.Value...),
-					}
-
-					fieldByName[op.Field.Key] = newField
-				case model.OpDelete:
-					delete(fieldByName, op.Field.Key)
-				default:
-					return nil, fmt.Errorf("unsupported operation type: %d", t)
-				}
+			if err := e.resolveAdd(ob); err != nil {
+				return nil, err
 			}
+		case model.OpBlockDelete:
+			e.fields = make(map[string]*model.Field)
+			break For
 		default:
-			return nil, fmt.Errorf("unsupported block type: %d", bt)
+			return nil, fmt.Errorf("invalid operation block type: %d", t)
 		}
 	}
+
+	return e.fieldsSlice(), nil
 }
 
-func getFields(fieldsMap map[string]*model.Field) []*model.Field {
-	out := make([]*model.Field, len(fieldsMap))
-	for _, v := range fieldsMap {
-		out = append(out, v)
+func (e *Evaluator) fieldsSlice() []*model.Field {
+	var fields = make([]*model.Field, 0)
+	for _, v := range e.fields {
+
+		fields = append(fields, v)
 	}
 
-	return out
+	return fields
+}
+
+func (e *Evaluator) resolveAdd(actual *model.OperationBlock) error {
+	for _, o := range actual.Ops {
+		if processed := e.processedFields[o.Field.Key]; processed {
+			continue
+		}
+
+		switch t := o.Type; t {
+		case model.OpOverride:
+			f := o.Field
+			if ap := e.appending[o.Field.Key]; ap {
+				f = e.merge(e.fields[o.Field.Key], f)
+				e.appending[o.Field.Key] = false
+			}
+
+			e.fields[o.Field.Key] = f
+			e.processedFields[o.Field.Key] = true
+		case model.OpAppend:
+			oldField, ok := e.fields[o.Field.Key]
+			if !ok {
+				e.appending[o.Field.Key] = true
+				e.fields[o.Field.Key] = o.Field
+				continue
+			}
+
+			e.fields[o.Field.Key] = e.merge(oldField, o.Field)
+		case model.OpDelete:
+			e.processedFields[o.Field.Key] = true
+			e.appending[o.Field.Key] = false
+			delete(e.fields, o.Field.Key)
+		default:
+			return fmt.Errorf("invalid operation type. operation type ID: %d", t)
+		}
+	}
+
+	return nil
+}
+
+func (e *Evaluator) merge(old, new *model.Field) *model.Field {
+	return &model.Field{
+		Key:   old.Key,
+		Value: append(new.Value, old.Value...),
+	}
 }

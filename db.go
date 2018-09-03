@@ -23,11 +23,11 @@ func NewDB(repository, dbName string) (*DB, error) {
 }
 
 func (db *DB) Table(name string) (*Table, error) {
-	return &Table{
-		Name:   name,
-		DBName: db.Name,
-		repo:   git.NewRepository(db.repository),
-	}, nil
+	return NewTable(
+		name,
+		db.Name,
+		git.NewRepository(db.repository),
+	), nil
 }
 
 func (db *DB) Sync() error {

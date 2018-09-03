@@ -9,16 +9,20 @@ type OperationBlock struct {
 	Ops  []*Operation       `json:"ops"`
 }
 
-func (pb *OperationBlock) Marshal(opType OperationBlockType) ([]byte, error) {
+func (pb *OperationBlock) Marshal() ([]byte, error) {
 	return json.Marshal(pb)
+}
+
+func UnmarshalOperationBlock(data []byte) (*OperationBlock, error) {
+	op := &OperationBlock{}
+	if err := json.Unmarshal(data, op); err != nil {
+		return nil, err
+	}
+
+	return op, nil
 }
 
 type Operation struct {
 	Type  OperationType `json:"t"`
 	Field *Field        `json:"f"`
-}
-
-type OperationBlockIter interface {
-	Next() (OperationBlock, error)
-	Close() error
 }

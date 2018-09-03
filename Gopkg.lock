@@ -2,6 +2,12 @@
 
 
 [[projects]]
+  name = "github.com/davecgh/go-spew"
+  packages = ["spew"]
+  revision = "8991bc29aa16c548c550c7ff78260e27b9ab7c73"
+  version = "v1.1.1"
+
+[[projects]]
   name = "github.com/emirpasic/gods"
   packages = [
     "containers",
@@ -39,6 +45,12 @@
   version = "v0.2.0"
 
 [[projects]]
+  name = "github.com/pmezard/go-difflib"
+  packages = ["difflib"]
+  revision = "792786c7400a136282c1664665ae0a8db921c6c2"
+  version = "v1.0.0"
+
+[[projects]]
   name = "github.com/sergi/go-diff"
   packages = ["diffmatchpatch"]
   revision = "1744e2970ca51c86172c8190fadad617561ed6e7"
@@ -54,6 +66,15 @@
   ]
   revision = "f187355171c936ac84a82793659ebb4936bc1c23"
   version = "v1.3.0"
+
+[[projects]]
+  name = "github.com/stretchr/testify"
+  packages = [
+    "assert",
+    "require"
+  ]
+  revision = "f35b8ab0b5a2cef36673838d662e249dd9c94686"
+  version = "v1.2.2"
 
 [[projects]]
   name = "github.com/xanzy/ssh-agent"
@@ -178,6 +199,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "d6e17bb9ecd962d5adac06ed81fe0c1d8c0cc496ccb13057ba8f4dddcf5b095e"
+  inputs-digest = "b8d68683e07c63402ec9ce91c10a13a57074a5b7519cfe2791810a0494d3b8e7"
   solver-name = "gps-cdcl"
   solver-version = 1

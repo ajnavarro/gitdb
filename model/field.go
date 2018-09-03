@@ -1,6 +1,6 @@
 package model
 
 type Field struct {
-	Key   string
-	Value []byte
+	Key   string `json:"k"`
+	Value []byte `json:"v"`
 }

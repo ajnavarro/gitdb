@@ -12,8 +12,14 @@ const (
 type OperationBlockType int
 
 const (
+	// OpBlockInvalid is an invalid OperationBlockType.
 	OpBlockInvalid OperationBlockType = iota
+	// OpBlockAdd type means add everithing is in that block to the previous one.
 	OpBlockAdd
-	//TODO	OpBlockCheckpoint
-	// TODO OpBlockDelete
+	// OpBlockDelete is a block that is erasing all previous information.
+	// If a operation block has this type, the content must be ignored.
+	OpBlockDelete
+	// OpBlockCheckpoint is a block that has all information from previous block
+	// squashed into one. You don't need to read ahead this block in the history
+	OpBlockCheckpoint
 )
